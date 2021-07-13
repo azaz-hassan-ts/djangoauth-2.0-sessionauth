@@ -12,7 +12,11 @@ from rest_framework.decorators import (
     permission_classes,
 )
 import requests
-from .serializers import LoginSerializer, RegistrationSerializer
+from .serializers import (
+    LoginSerializer,
+    RegistrationSerializer,
+    ProfileSerializer,
+)
 
 
 class LoginView(generics.CreateAPIView):
@@ -39,7 +43,7 @@ class LoginView(generics.CreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return Response(
-            {"message": "User is not active"}, status=status.HTTP_403_FORBIDDEN
+            {"message": "Invalid Credentials"}, status=status.HTTP_403_FORBIDDEN
         )
 
 
@@ -77,21 +81,49 @@ class RegisterView(generics.CreateAPIView):
 
 
 class ProfileView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    permission_classes = (IsAuthenticated,)
+    http_method_names = ["get", "put"]
 
-    def post(self, request, format=None):
-        username = str(request.user)
-        user = User.objects.get(username=username)
-        if user is not None:
+    def get_serializer_class(self):
+        if self.request.method == "PUT":
+            return ProfileSerializer
+
+    def get(self, request, format=None):
+        if request.method == "GET":
+            username = str(request.user)
+            user = User.objects.get(username=username)
+            if user.is_active:
+                return Response(
+                    {
+                        "username": user.username,
+                        "email": user.email,
+                    }
+                )
+            logout(request)
             return Response(
-                {
-                    "username": user.username,
-                    "email": user.email,
-                    "message": "You won't get results if your token is expired",
-                }
+                {"message": "Your account is disabled. Please log in again"},
+                status=status.HTTP_401_UNAUTHORIZED,
             )
-        return Response(
-            {"message": "Your account is disabled. Please log in again"},
-            status=status.HTTP_401_UNAUTHORIZED,
-        )
+
+    def put(self, request, format=None):
+        if request.method == "PUT":
+            try:
+                user = User.objects.get(username=str(request.user))
+            except User.DoesNotExist:
+                return Response(
+                    {"message": "User doesn't exist"}, status=status.HTTP_404_NOT_FOUND
+                )
+
+            user_data = JSONParser().parse(request)
+            user_serializer = self.get_serializer_class()
+            user_serializer = user_serializer(user, user_data)
+            if user_serializer.is_valid():
+                user_serializer.save()
+                return Response(
+                    {
+                        "message": "Data has been updated succesfully",
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            return Response(
+                {"message": "Invalid Information"}, status=status.HTTP_400_BAD_REQUEST
+            )
