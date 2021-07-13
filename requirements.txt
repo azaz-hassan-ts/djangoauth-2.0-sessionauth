@@ -7,6 +7,7 @@ dj-database-url==0.5.0
 Django==3.2.5
 django-cors-headers==3.7.0
 django-heroku==0.3.1
+django-rest-marshmallow==4.0.2
 djangorestframework==3.12.4
 drf-yasg==1.20.0
 idna==2.10
@@ -14,7 +15,6 @@ inflection==0.5.1
 itypes==1.2.0
 Jinja2==3.0.1
 MarkupSafe==2.0.1
-marshmallow==3.12.2
 psycopg2==2.9.1
 pyparsing==2.4.7
 pytz==2021.1
