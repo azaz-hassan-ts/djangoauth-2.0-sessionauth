@@ -41,3 +41,12 @@ class LoginView(generics.CreateAPIView):
         return Response(
             {"message": "User is not active"}, status=status.HTTP_403_FORBIDDEN
         )
+
+
+@api_view(["GET"])
+@permission_classes((IsAuthenticated,))
+def logout_view(request):
+    logout(request)
+    return Response(
+        {"message": "User is succesfully logged out"}, status=status.HTTP_200_OK
+    )
