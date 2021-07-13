@@ -74,3 +74,24 @@ class RegisterView(generics.CreateAPIView):
                 status=status.HTTP_201_CREATED,
             )
         return Response(register_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProfileView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, format=None):
+        username = str(request.user)
+        user = User.objects.get(username=username)
+        if user is not None:
+            return Response(
+                {
+                    "username": user.username,
+                    "email": user.email,
+                    "message": "You won't get results if your token is expired",
+                }
+            )
+        return Response(
+            {"message": "Your account is disabled. Please log in again"},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
