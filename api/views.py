@@ -12,9 +12,9 @@ from rest_framework.decorators import (
     permission_classes,
 )
 import requests
-from .serializers import LoginSerializer
+from .serializers import LoginSerializer, RegistrationSerializer
 
-# Create your views here.
+
 class LoginView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
@@ -50,3 +50,27 @@ def logout_view(request):
     return Response(
         {"message": "User is succesfully logged out"}, status=status.HTTP_200_OK
     )
+
+
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    permission_classes = (AllowAny,)
+    serializer_class = RegistrationSerializer
+
+    def post(self, request, format=None):
+        if request.data == {}:
+            return Response(
+                {"message": "Send request Body"}, status=status.HTTP_204_NO_CONTENT
+            )
+
+        register_serializer = RegistrationSerializer(data=request.data)
+        if register_serializer.is_valid():
+            register_serializer.save()
+            return Response(
+                {
+                    "data": register_serializer.data,
+                    "message": "You are succesfully registered",
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(register_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
